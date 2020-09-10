@@ -55,7 +55,7 @@ exports.registerUser = async (request, response) => {
         return response.status(200).json({
             status: true,
             message: "user created successfully",
-            data: token
+            token: token
         });
 
     } catch (error) {
@@ -256,7 +256,7 @@ exports.login = async (request, response) => {
         return response.status(200).json({
             status: true,
             message: 'login successfully',
-            data: getToken(user)
+            token: getToken(user)
         })
         
     } catch (error) {
