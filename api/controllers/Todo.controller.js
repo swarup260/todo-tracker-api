@@ -40,7 +40,8 @@ module.exports.addTodo = async (request, response) => {
             status: requestBody.status,
             isComplete: false,
             deadline: requestBody.deadline,
-            user: userData._id
+            user: userData._id,
+            description : requestBody.description || "",
         });
         const result = await newTodo.save();
 
@@ -83,6 +84,9 @@ module.exports.updateTodo = async (request, response) => {
 
         if (requestBody.update.taskName) {
             updateObject.taskName = requestBody.update.taskName;
+        }
+        if (requestBody.update.description) {
+            updateObject.description = requestBody.update.description;
         }
         if (requestBody.update.hasOwnProperty("status")) {
             updateObject.status = requestBody.update.status;
