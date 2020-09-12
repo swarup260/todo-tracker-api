@@ -136,6 +136,24 @@ exports.updateUser = async (request, response) => {
 
 exports.getUser = async (request, response) => {
     try {
+        const id = await request.userData._id;
+        if (id) {
+            user = await UserModel.findById(id);
+            return response.status(200).json({
+                status: 'true',
+                message: 'user',
+                data : user
+            })
+        }
+    } catch (error) {
+        response.status(400).json({
+            status: false,
+            message: error.message
+        })
+    }
+}
+exports.getAllUser = async (request, response) => {
+    try {
 
         let id = await request.params.objectId;
         let users;
