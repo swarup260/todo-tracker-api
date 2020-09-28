@@ -1,5 +1,19 @@
 const mongoose = require("mongoose");
-const { Schema } = require('mongoose');
+const {
+    Schema
+} = require('mongoose');
+
+/* to track the no. of time the deadline is extended  */
+const historySchema = new Schema({
+    taskName: {
+        type: String,
+        required: true
+    },
+    preDeadline: {
+        type: Date
+    }
+})
+
 
 const todoSchema = {
     taskName: {
@@ -25,6 +39,9 @@ const todoSchema = {
     deadline: {
         type: Date,
         default: Date.now()
+    },
+    history: {
+        type: [historySchema],
     },
     createdAt: {
         type: Date,
