@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
-const { Schema } = require("mongoose");
+const {
+  Schema
+} = require("mongoose");
 
 const notesSchema = new Schema({
   noteName: {
@@ -9,6 +11,11 @@ const notesSchema = new Schema({
   description: {
     type: String,
     required: true,
+  },
+  columnRef: {
+    type: Schema.Types.ObjectId,
+    ref: "columnsSchema",
+    required : true
   },
   createdAt: {
     type: Date,
@@ -26,8 +33,13 @@ const columnsSchema = new Schema({
     type: String,
     required: true,
   },
-  notes: {
-    type: [notesSchema],
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  modifiedAt: {
+    type: Date,
+    default: Date.now(),
   },
 });
 
@@ -46,6 +58,9 @@ const projectsSchema = {
   },
   columns: {
     type: [columnsSchema],
+  },
+  notes: {
+    type: [notesSchema],
   },
   createdAt: {
     type: Date,
