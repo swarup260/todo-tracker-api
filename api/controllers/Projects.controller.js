@@ -1,6 +1,4 @@
-const {
-    ObjectID
-} = require("mongodb");
+const { ObjectID } = require("mongodb");
 const ProjectsModel = require("../models/Projects.model");
 
 /* Projects CRUD */
@@ -76,12 +74,10 @@ module.exports.getProject = async (request, response) => {
                 });
             }
 
-            const result = await ProjectsModel
-                .find({
-                    _id: id,
-                    user: userObjectID,
-                })
-                .exec();
+            const result = await ProjectsModel.find({
+                _id: id,
+                user: userObjectID,
+            }).exec();
             return response.status(200).json({
                 status: false,
                 message: "Project list",
@@ -90,7 +86,7 @@ module.exports.getProject = async (request, response) => {
         }
 
         const result = await ProjectsModel.find({
-            user: userObjectID
+            user: userObjectID,
         }).exec();
         return response.status(200).json({
             status: false,
@@ -142,12 +138,14 @@ module.exports.updateProject = async (request, response) => {
         }
 
         const result = await todoModel
-            .findOneAndUpdate({
+            .findOneAndUpdate(
+                {
                     _id: requestBody.id,
                     user: userObjectID,
                 },
-                updateObject, {
-                    new: true
+                updateObject,
+                {
+                    new: true,
                 }
             )
             .exec();
@@ -250,18 +248,22 @@ module.exports.addColumn = async (request, response) => {
         };
         console.log(requestBody.update.columnName);
 
-        const result = await ProjectsModel.findOneAndUpdate({
-            _id: requestBody.projectId,
-            'columns.columnName': {
-                $nin: [requestBody.update.columnName]
-            }
-        }, {
-            $push: {
-                columns: updateObject
+        const result = await ProjectsModel.findOneAndUpdate(
+            {
+                _id: requestBody.projectId,
+                "columns.columnName": {
+                    $nin: [requestBody.update.columnName],
+                },
             },
-        }, {
-            new: true
-        }).exec();
+            {
+                $push: {
+                    columns: updateObject,
+                },
+            },
+            {
+                new: true,
+            }
+        ).exec();
         if (!result) {
             return response.status(400).json({
                 status: false,
@@ -302,6 +304,16 @@ module.exports.updateColumn = async (request, response) => {
             });
         }
         if (
+            !requestBody.columnId ||
+            requestBody.columnId == "" ||
+            typeof requestBody.columnId != "string"
+        ) {
+            return response.status(400).json({
+                status: false,
+                message: "columnId required and must be a string",
+            });
+        }
+        if (
             !requestBody.update.columnName ||
             requestBody.update.columnName == "" ||
             typeof requestBody.update.columnName != "string"
@@ -313,21 +325,19 @@ module.exports.updateColumn = async (request, response) => {
         }
 
         const updateObject = {
-            columnName: requestBody.update.columnName,
+            "columns.1.columnName": requestBody.update.columnName,
         };
+        /* db.projects.update( { "_id" : ObjectId("5f731aee9d7fd5fb345a77a4") ,"columns._id" : ObjectId("5f731af59d7fd5fb345a77a5") }, {$set : { "columns.1.columnName" : "todo list" }} ); */
 
-        const result = await ProjectsModel.findOneAndUpdate({
-            _id: requestBody.projectId,
-            'columns.columnName': {
-                $nin: [requestBody.update.columnName]
-            }
-        }, {
-            $push: {
-                columns: updateObject
+        const result = await ProjectsModel.findOneAndUpdate(
+            {
+                "_id": requestBody.projectId,
+                "columns._id": requestBody.update.columnId,
             },
-        }, {
-            new: true
-        }).exec();
+            {
+                $set : updateObject
+            }
+        ).exec();
         if (!result) {
             return response.status(400).json({
                 status: false,
@@ -441,23 +451,27 @@ module.exports.addNote = async (request, response) => {
 
         const updateObject = {
             noteName: requestBody.update.noteName,
-            columnRef: requestBody.columnId
+            columnRef: requestBody.columnId,
         };
 
         if (requestBody.update.description) {
             updateObject.description = requestBody.update.description;
         }
 
-        const result = await ProjectsModel.findOneAndUpdate({
-            "_id": requestBody.projectId,
-            "columns._id": requestBody.columnId
-        }, {
-            $push: {
-                "notes": updateObject
+        const result = await ProjectsModel.findOneAndUpdate(
+            {
+                _id: requestBody.projectId,
+                "columns._id": requestBody.columnId,
             },
-        }, {
-            new: true
-        }).exec();
+            {
+                $push: {
+                    notes: updateObject,
+                },
+            },
+            {
+                new: true,
+            }
+        ).exec();
 
         return response.status(200).json({
             status: false,
@@ -516,23 +530,27 @@ module.exports.updateNote = async (request, response) => {
 
         const updateObject = {
             noteName: requestBody.update.noteName,
-            columnRef: requestBody.columnId
+            columnRef: requestBody.columnId,
         };
 
         if (requestBody.update.description) {
             updateObject.description = requestBody.update.description;
         }
 
-        const result = await ProjectsModel.findOneAndUpdate({
-            "_id": requestBody.projectId,
-            "columns._id": requestBody.columnId
-        }, {
-            $push: {
-                "notes": updateObject
+        const result = await ProjectsModel.findOneAndUpdate(
+            {
+                _id: requestBody.projectId,
+                "columns._id": requestBody.columnId,
             },
-        }, {
-            new: true
-        }).exec();
+            {
+                $push: {
+                    notes: updateObject,
+                },
+            },
+            {
+                new: true,
+            }
+        ).exec();
 
         return response.status(200).json({
             status: false,
