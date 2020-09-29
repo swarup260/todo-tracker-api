@@ -113,35 +113,28 @@ module.exports.updateProject = async (request, response) => {
                 message: "must be an object",
             });
         }
-        if (typeof requestBody.update != "object") {
+        if (
+            !ObjectID.isValid(requestBody.projectId)
+        ) {
             return response.status(400).json({
                 status: false,
-                message: "must be an object",
+                message: "projectId required and must be a object",
             });
         }
 
         const updateObject = {};
 
-        if (requestBody.update.taskName) {
-            updateObject.taskName = requestBody.update.taskName;
+        if (requestBody.update.projectName) {
+            updateObject.projectName = requestBody.update.projectName;
         }
+
         if (requestBody.update.description) {
             updateObject.description = requestBody.update.description;
         }
-        if (requestBody.update.hasOwnProperty("status")) {
-            updateObject.status = requestBody.update.status;
-        }
 
-        if (requestBody.update.hasOwnProperty("isComplete")) {
-            updateObject.isComplete = requestBody.update.isComplete;
-        }
-        if (requestBody.update.deadline) {
-            updateObject.deadline = Date.parse(requestBody.update.deadline);
-        }
-
-        const result = await todoModel
+        const result = await ProjectsModel
             .findOneAndUpdate({
-                    _id: requestBody.id,
+                    _id: requestBody.projectId,
                     user: userObjectID,
                 },
                 updateObject, {
@@ -149,14 +142,20 @@ module.exports.updateProject = async (request, response) => {
                 }
             )
             .exec();
+        if (!result) {
+            response.status(400).json({
+                status: false,
+                message: "Updated Failed",
+            });
+        }
 
         return response.status(200).json({
             status: true,
-            message: "todo updated successfully",
+            message: "project updated successfully",
             data: result,
         });
     } catch (error) {
-        console.log(error);
+
         response.status(400).json({
             status: false,
             message: error.toString(),
@@ -183,18 +182,17 @@ module.exports.deleteProject = async (request, response) => {
                 });
             }
 
-            const result = await todoModel
+            const result = await ProjectsModel
                 .deleteOne({
                     _id: id,
                     user: userObjectID,
                 })
                 .exec();
-            console.log(result);
 
             if (result.deletedCount) {
                 return response.status(200).json({
                     status: true,
-                    message: "todo deleted successfully",
+                    message: "Project deleted successfully",
                 });
             }
 
@@ -223,13 +221,13 @@ module.exports.addColumn = async (request, response) => {
             });
         }
         if (
+
             !requestBody.projectId ||
-            requestBody.projectId == "" ||
-            typeof requestBody.projectId != "string"
+            !ObjectID.isValid(requestBody.projectId)
         ) {
             return response.status(400).json({
                 status: false,
-                message: "projectId required and must be a string",
+                message: "projectId required and must be a ObjectID",
             });
         }
         if (
@@ -303,12 +301,11 @@ module.exports.updateColumn = async (request, response) => {
 
         if (
             !requestBody.columnId ||
-            requestBody.columnId == "" ||
-            typeof requestBody.columnId != "string"
+            !ObjectID.isValid(requestBody.columnId)
         ) {
             return response.status(400).json({
                 status: false,
-                message: "columnId required and must be a string",
+                message: "columnId required and must be a ObjectID",
             });
         }
 
@@ -360,10 +357,10 @@ module.exports.updateColumn = async (request, response) => {
 module.exports.deleteColumn = async (request, response) => {
     let id = await request.params.objectId;
     try {
-        if (!id) {
+        if (!id || !ObjectID.isValid(id)) {
             return response.status(400).json({
                 status: false,
-                message: "must be an object",
+                message: "id required and must be ObjectID",
             });
         }
 
@@ -478,23 +475,21 @@ module.exports.updateNote = async (request, response) => {
 
         if (
             !requestBody.projectId ||
-            requestBody.projectId == "" ||
-            typeof requestBody.projectId != "string"
+            !ObjectID.isValid(requestBody.projectId)
         ) {
             return response.status(400).json({
                 status: false,
-                message: "projectId required and must be a string",
+                message: "projectId required and must be a ObjectID",
             });
         }
 
         if (
             !requestBody.noteId ||
-            requestBody.noteId == "" ||
-            typeof requestBody.noteId != "string"
+            !ObjectID.isValid(requestBody.noteId)
         ) {
             return response.status(400).json({
                 status: false,
-                message: "noteId required and must be a string",
+                message: "noteId required and must be a ObjectID",
             });
         }
 
@@ -553,10 +548,10 @@ module.exports.updateNote = async (request, response) => {
 module.exports.deleteNote = async (request, response) => {
     let id = await request.params.objectId;
     try {
-        if (!id) {
+        if (!id || !ObjectID.isValid(id)) {
             return response.status(400).json({
                 status: false,
-                message: "must be an object",
+                message: "id required and must be ObjectID",
             });
         }
 
