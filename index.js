@@ -16,10 +16,12 @@ app.use(cors())
 const userRoutes = require('./api/routes/User.routes');
 const todoRoutes = require('./api/routes/Todo.routes');
 const projectRoutes = require('./api/routes/Projects.routes');
+const habitRoutes = require('./api/routes/Habit.routes');
 
 app.use('/users',userRoutes);
 app.use('/todos', todoRoutes);
 app.use('/projects', projectRoutes);
+app.use('/habit', habitRoutes);
 
 
 
