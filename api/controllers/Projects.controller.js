@@ -2,6 +2,7 @@ const {
     ObjectID
 } = require("mongodb");
 const ProjectsModel = require("../models/Projects.model");
+const ProjectActivityModel = require("../models/ProjectActivityHistory.model");
 
 /* Projects CRUD */
 module.exports.addProject = async (request, response) => {
@@ -41,6 +42,15 @@ module.exports.addProject = async (request, response) => {
             user: userData._id,
         });
         const result = await newProject.save();
+        if (result) {
+            await new ProjectActivityModel({
+                action : "SAVE",
+                projectRef : result._id,
+                data : result,
+                message : "new project added",
+                user : userData._id
+            }).save();
+        }
 
         return response.status(200).json({
             status: false,
@@ -190,6 +200,18 @@ module.exports.deleteProject = async (request, response) => {
                 .exec();
 
             if (result.deletedCount) {
+
+                if (result) {
+                    await new ProjectActivityModel({
+                        action : "DELETE",
+                        projectRef : id,
+                        data : {},
+                        message : "project deleted",
+                        user : userObjectID
+                    }).save();
+                }
+
+
                 return response.status(200).json({
                     status: true,
                     message: "Project deleted successfully",
@@ -212,7 +234,7 @@ module.exports.deleteProject = async (request, response) => {
 /* Columns CUD */
 module.exports.addColumn = async (request, response) => {
     const requestBody = request.body;
-
+    const userObjectID = request.userData._id;
     try {
         if (typeof requestBody != "object") {
             return response.status(400).json({
@@ -263,6 +285,16 @@ module.exports.addColumn = async (request, response) => {
                 status: false,
                 message: "Columns Already Present",
             });
+        }
+
+        if (result) {
+            await new ProjectActivityModel({
+                action : "SAVE",
+                projectRef : result._id,
+                data : result,
+                message : `${requestBody.update.columnName} column added`,
+                user : userObjectID
+            }).save();
         }
 
         return response.status(200).json({
@@ -356,6 +388,8 @@ module.exports.updateColumn = async (request, response) => {
 
 module.exports.deleteColumn = async (request, response) => {
     let id = await request.params.objectId;
+    const userObjectID = request.userData._id;
+
     try {
         if (!id || !ObjectID.isValid(id)) {
             return response.status(400).json({
@@ -384,6 +418,16 @@ module.exports.deleteColumn = async (request, response) => {
             });
         }
 
+        if (result) {
+            await new ProjectActivityModel({
+                action : "DELETE",
+                projectRef : id,
+                data : {},
+                message : "column deleted",
+                user : userObjectID
+            }).save();
+        }
+
         return response.status(200).json({
             status: true,
             message: "Columns Remove successfully",
@@ -401,7 +445,7 @@ module.exports.deleteColumn = async (request, response) => {
 
 module.exports.addNote = async (request, response) => {
     const requestBody = request.body;
-
+    const userObjectID = request.userData._id;
     try {
         if (typeof requestBody != "object") {
             return response.status(400).json({
@@ -449,6 +493,18 @@ module.exports.addNote = async (request, response) => {
         }, {
             new: true,
         }).exec();
+
+
+        if (result) {
+            await new ProjectActivityModel({
+                action : "SAVE",
+                projectRef : result._id,
+                data : result,
+                message : `${updateObject.noteName} note added`,
+                user : userObjectID
+            }).save();
+        }
+
 
         return response.status(200).json({
             status: false,
@@ -547,6 +603,8 @@ module.exports.updateNote = async (request, response) => {
 
 module.exports.deleteNote = async (request, response) => {
     let id = await request.params.objectId;
+    const userObjectID = request.userData._id;
+
     try {
         if (!id || !ObjectID.isValid(id)) {
             return response.status(400).json({
@@ -573,6 +631,16 @@ module.exports.deleteNote = async (request, response) => {
                 status: false,
                 message: "Note Not Present",
             });
+        }
+
+        if (result) {
+            await new ProjectActivityModel({
+                action : "DELETE",
+                projectRef : id,
+                data : {},
+                message : "note deleted",
+                user : userObjectID
+            }).save();
         }
 
         return response.status(200).json({
