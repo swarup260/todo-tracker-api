@@ -3,6 +3,23 @@ const {
   Schema
 } = require("mongoose");
 
+
+const commentSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "user",
+  },
+  comment: {
+    type: String,
+    required : true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+  }
+})
+
+
 const notesSchema = new Schema({
   noteName: {
     type: String,
@@ -15,7 +32,10 @@ const notesSchema = new Schema({
   columnRef: {
     type: Schema.Types.ObjectId,
     ref: "columnsSchema",
-    required : true
+    required: true
+  },
+  comments: {
+    type: [commentSchema]
   },
   createdAt: {
     type: Date,
