@@ -16,10 +16,10 @@ npm run dev  #dev server
 ## RoadMap 
 
 ### Version 1.1
-- [*] Todo Users Api
-- [*] Todo Curd Api
+- [x] Todo Users Api
+- [x] Todo Curd Api
 ### Version 1.2
-- [*] Habit Tracker Api
+- [x] Habit Tracker Api
 - [ ] Project Management Api
 - [ ] Project Notes Api
 ### Version 1.3
