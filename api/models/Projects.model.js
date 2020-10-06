@@ -4,54 +4,18 @@ const {
 } = require("mongoose");
 
 
-const commentSchema = new Schema({
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "user",
-  },
-  comment: {
-    type: String,
-    required : true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  }
-})
-
-
-const notesSchema = new Schema({
-  noteName: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  columnRef: {
-    type: Schema.Types.ObjectId,
-    ref: "columnsSchema",
-    required: true
-  },
-  comments: {
-    type: [commentSchema]
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
-  modifiedAt: {
-    type: Date,
-    default: Date.now(),
-  },
-});
-
 /* columns Schema  */
 const columnsSchema = new Schema({
-  columnName: {
+  name: {
     type: String,
     required: true,
+  },
+  position: {
+    type: Number,
+    required: false,
+  },
+  notes: {
+    type: [],
   },
   createdAt: {
     type: Date,
@@ -64,7 +28,7 @@ const columnsSchema = new Schema({
 });
 
 const projectsSchema = {
-  projectName: {
+  name: {
     type: String,
     required: true,
   },
@@ -78,9 +42,6 @@ const projectsSchema = {
   },
   columns: {
     type: [columnsSchema],
-  },
-  notes: {
-    type: [notesSchema],
   },
   createdAt: {
     type: Date,
