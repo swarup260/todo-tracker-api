@@ -14,7 +14,7 @@ router.delete('/:objectId', checkAuth, projectsController.deleteProject);
 
 router.post('/column', checkAuth, projectsController.addColumn);
 router.patch('/column', checkAuth, projectsController.updateColumn);
-router.delete('/column/:objectId', checkAuth, projectsController.deleteColumn);
+router.delete('/column/:projectId/:columnId', checkAuth, projectsController.deleteColumn);
 
 /* Note Route */
 router.post('/note', checkAuth, projectsController.addNote);

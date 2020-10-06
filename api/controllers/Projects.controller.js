@@ -2,6 +2,7 @@ const {
     ObjectID
 } = require("mongodb");
 const ProjectsModel = require("../models/Projects.model");
+const NotesModel = require("../models/Notes.model");
 const ProjectActivityModel = require("../models/ProjectActivityHistory.model");
 
 /* Projects CRUD */
@@ -16,13 +17,13 @@ module.exports.addProject = async (request, response) => {
             });
         }
         if (
-            !requestBody.projectName ||
-            requestBody.projectName == "" ||
-            typeof requestBody.projectName != "string"
+            !requestBody.name ||
+            requestBody.name == "" ||
+            typeof requestBody.name != "string"
         ) {
             return response.status(400).json({
                 status: false,
-                message: "projectName required and must be a string",
+                message: "name required and must be a string",
             });
         }
         if (
@@ -37,18 +38,18 @@ module.exports.addProject = async (request, response) => {
         }
 
         const newProject = new ProjectsModel({
-            projectName: requestBody.projectName,
+            name: requestBody.name,
             description: requestBody.description,
             user: userData._id,
         });
         const result = await newProject.save();
         if (result) {
             await new ProjectActivityModel({
-                action : "SAVE",
-                projectRef : result._id,
-                data : result,
-                message : "new project added",
-                user : userData._id
+                action: "SAVE",
+                projectRef: result._id,
+                data: result,
+                message: "new project added",
+                user: userData._id
             }).save();
         }
 
@@ -67,6 +68,7 @@ module.exports.addProject = async (request, response) => {
     }
 };
 
+// single query
 module.exports.getProject = async (request, response) => {
     let id = await request.params.objectId;
     const userObjectID = request.userData._id;
@@ -97,9 +99,19 @@ module.exports.getProject = async (request, response) => {
             });
         }
 
-        const result = await ProjectsModel.find({
-            user: userObjectID,
-        }).exec();
+        const result = await ProjectsModel.aggregate([{
+                $match: {
+                    user: userObjectID
+                }
+            },
+            {
+                $project: {
+                    _id: "$_id",
+                    name: "$name",
+                    description: "$description",
+                }
+            }
+        ]).exec();
         return response.status(200).json({
             status: false,
             message: "Project list",
@@ -203,11 +215,11 @@ module.exports.deleteProject = async (request, response) => {
 
                 if (result) {
                     await new ProjectActivityModel({
-                        action : "DELETE",
-                        projectRef : id,
-                        data : {},
-                        message : "project deleted",
-                        user : userObjectID
+                        action: "DELETE",
+                        projectRef: id,
+                        data: {},
+                        message: "project deleted",
+                        user: userObjectID
                     }).save();
                 }
 
@@ -253,25 +265,52 @@ module.exports.addColumn = async (request, response) => {
             });
         }
         if (
-            !requestBody.update.columnName ||
-            requestBody.update.columnName == "" ||
-            typeof requestBody.update.columnName != "string"
+            !requestBody.update.name ||
+            requestBody.update.name == "" ||
+            typeof requestBody.update.name != "string"
         ) {
             return response.status(400).json({
                 status: false,
-                message: "columnName required and must be a string",
+                message: "name required and must be a string",
+            });
+        }
+
+
+        if (
+            !requestBody.update.position ||
+            requestBody.update.position == "" ||
+            typeof requestBody.update.position != "number"
+        ) {
+            return response.status(400).json({
+                status: false,
+                message: "position required and must be a number",
             });
         }
 
         const updateObject = {
-            columnName: requestBody.update.columnName,
+            name: requestBody.update.name,
+            position: requestBody.update.position,
         };
 
+        const project = await ProjectsModel.findById(requestBody.projectId);
+        if (!project) {
+            return response.status(400).json({
+                status: false,
+                message: "Project Not Found",
+            });
+        }
+
+        if (!project.user.equals(userObjectID)) {
+            return response.status(400).json({
+                status: false,
+                message: "Invalid User",
+            });
+        }
 
         const result = await ProjectsModel.findOneAndUpdate({
             _id: requestBody.projectId,
-            "columns.columnName": {
-                $nin: [requestBody.update.columnName],
+            "columns.name": {
+                $nin: [requestBody.update.name],
             },
         }, {
             $push: {
@@ -289,11 +328,11 @@ module.exports.addColumn = async (request, response) => {
 
         if (result) {
             await new ProjectActivityModel({
-                action : "SAVE",
-                projectRef : result._id,
-                data : result,
-                message : `${requestBody.update.columnName} column added`,
-                user : userObjectID
+                action: "SAVE",
+                projectRef: result._id,
+                data: result,
+                message: `${requestBody.update.name} column added`,
+                user: userObjectID
             }).save();
         }
 
@@ -342,20 +381,23 @@ module.exports.updateColumn = async (request, response) => {
         }
 
         if (
-            !requestBody.update.columnName ||
-            requestBody.update.columnName == "" ||
-            typeof requestBody.update.columnName != "string"
+            !requestBody.update.name ||
+            requestBody.update.name == "" ||
+            typeof requestBody.update.name != "string"
         ) {
             return response.status(400).json({
                 status: false,
-                message: "columnName required and must be a string",
+                message: "name required and must be a string",
             });
         }
 
         const updateObject = {
-            "columns.1.columnName": requestBody.update.columnName,
+            "columns.$.name": requestBody.update.name,
         };
 
+        if (requestBody.update.position) {
+            updateObject["columns.$.position"] = requestBody.update.position;
+        }
 
         const result = await ProjectsModel.findOneAndUpdate({
             "_id": requestBody.projectId,
@@ -369,7 +411,7 @@ module.exports.updateColumn = async (request, response) => {
         if (!result) {
             return response.status(400).json({
                 status: false,
-                message: "Columns Already Present",
+                message: "Project Not Found",
             });
         }
 
@@ -387,25 +429,35 @@ module.exports.updateColumn = async (request, response) => {
 };
 
 module.exports.deleteColumn = async (request, response) => {
-    let id = await request.params.objectId;
+    let projectID = await request.params.projectId;
+    let columnID = await request.params.columnId;
+
+    console.log(projectID, columnID);
     const userObjectID = request.userData._id;
 
     try {
-        if (!id || !ObjectID.isValid(id)) {
+        if (!projectID || !ObjectID.isValid(projectID)) {
             return response.status(400).json({
                 status: false,
-                message: "id required and must be ObjectID",
+                message: "projectID required and must be ObjectId",
+            });
+        }
+        if (!columnID || !ObjectID.isValid(columnID)) {
+            return response.status(400).json({
+                status: false,
+                message: "columnID required and must be ObjectId",
             });
         }
 
 
         const result = await ProjectsModel.findOneAndUpdate({
-            "columns._id": id,
+            "_id": projectID,
+            "columns._id": columnID,
         }, {
 
             $pull: {
                 "columns": {
-                    "_id": id
+                    "_id": columnID
                 }
             }
         }, {
@@ -420,11 +472,11 @@ module.exports.deleteColumn = async (request, response) => {
 
         if (result) {
             await new ProjectActivityModel({
-                action : "DELETE",
-                projectRef : id,
-                data : {},
-                message : "column deleted",
-                user : userObjectID
+                action: "DELETE",
+                projectRef: projectID,
+                data: {},
+                message: "column deleted",
+                user: userObjectID
             }).save();
         }
 
@@ -434,6 +486,7 @@ module.exports.deleteColumn = async (request, response) => {
             data: result,
         });
     } catch (error) {
+        console.log(error);
         return response.status(400).json({
             status: false,
             message: error,
@@ -456,7 +509,8 @@ module.exports.addNote = async (request, response) => {
         if (
             !requestBody.projectId ||
             requestBody.projectId == "" ||
-            typeof requestBody.projectId != "string"
+            typeof requestBody.projectId != "string" ||
+            !ObjectID.isValid(requestBody.projectId)
         ) {
             return response.status(400).json({
                 status: false,
@@ -465,30 +519,73 @@ module.exports.addNote = async (request, response) => {
         }
 
         if (
-            !requestBody.update.noteName ||
-            requestBody.update.noteName == "" ||
-            typeof requestBody.update.noteName != "string"
+            !requestBody.update.name ||
+            requestBody.update.name == "" ||
+            typeof requestBody.update.name != "string"
         ) {
             return response.status(400).json({
                 status: false,
-                message: "columnName required and must be a string",
+                message: "name required and must be a string",
             });
         }
 
+
+        if (
+            !requestBody.update.position ||
+            requestBody.update.position == "" ||
+            typeof requestBody.update.position != "number"
+        ) {
+            return response.status(400).json({
+                status: false,
+                message: "position required and must be a number",
+            });
+        }
+
+        if (
+            !requestBody.update.columnRef ||
+            requestBody.update.columnRef == "" ||
+            typeof requestBody.update.columnRef != "string" ||
+            !ObjectID.isValid(requestBody.update.columnRef)
+        ) {
+            return response.status(400).json({
+                status: false,
+                message: "columnId required and must be a string",
+            });
+        }
+
+        const project = await ProjectsModel.find({
+            _id: requestBody.projectId,
+            "columns._id": requestBody.update.columnRef
+        });
+        if (project.length == 0) {
+            return response.status(400).json({
+                status: false,
+                message: "Project Not Found",
+            });
+        }
         const updateObject = {
-            noteName: requestBody.update.noteName,
-            columnRef: requestBody.columnId,
+            name: requestBody.update.name,
+            position: requestBody.update.position
         };
 
         if (requestBody.update.description) {
             updateObject.description = requestBody.update.description;
         }
 
+
+        /* Add New Note */
+
+        const newNotes = await NotesModel(updateObject)
+
+        newNotes.save();
+
+
         const result = await ProjectsModel.findOneAndUpdate({
             _id: requestBody.projectId,
+            "columns._id": requestBody.update.columnRef
         }, {
-            $push: {
-                notes: updateObject,
+            $addToSet: {
+                "columns.$.notes": newNotes._id,
             },
         }, {
             new: true,
@@ -497,11 +594,11 @@ module.exports.addNote = async (request, response) => {
 
         if (result) {
             await new ProjectActivityModel({
-                action : "SAVE",
-                projectRef : result._id,
-                data : result,
-                message : `${updateObject.noteName} note added`,
-                user : userObjectID
+                action: "SAVE",
+                projectRef: result._id,
+                data: result,
+                message: `${updateObject.noteName} note added`,
+                user: userObjectID
             }).save();
         }
 
@@ -509,7 +606,7 @@ module.exports.addNote = async (request, response) => {
         return response.status(200).json({
             status: false,
             message: "note added successfully",
-            data: result,
+            data: newNotes,
         });
     } catch (error) {
         return response.status(400).json({
@@ -561,20 +658,17 @@ module.exports.updateNote = async (request, response) => {
         }
 
         const updateObject = {
-            "notes.1.noteName": requestBody.update.noteName,
+            "columns.1.notes.noteName": requestBody.update.noteName,
         };
 
         if (requestBody.update.description) {
-            updateObject["notes.1.description"] = requestBody.update.description;
-        }
-        if (requestBody.update.columnRef) {
-            updateObject["notes.1.columnRef"] = requestBody.update.columnRef;
+            updateObject["columns.1.notes.description"] = requestBody.update.description;
         }
 
 
         const result = await ProjectsModel.findOneAndUpdate({
             "_id": requestBody.projectId,
-            "notes._id": requestBody.noteId,
+            "columns.notes._id": requestBody.noteId,
         }, {
 
             $set: updateObject
@@ -619,7 +713,7 @@ module.exports.deleteNote = async (request, response) => {
         }, {
 
             $pull: {
-                "notes": {
+                "columns.notes": {
                     "_id": id
                 }
             }
@@ -635,11 +729,11 @@ module.exports.deleteNote = async (request, response) => {
 
         if (result) {
             await new ProjectActivityModel({
-                action : "DELETE",
-                projectRef : id,
-                data : {},
-                message : "note deleted",
-                user : userObjectID
+                action: "DELETE",
+                projectRef: id,
+                data: {},
+                message: "note deleted",
+                user: userObjectID
             }).save();
         }
 
