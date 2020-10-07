@@ -32,6 +32,10 @@ const notesSchema = new Schema({
         type: Number,
         required: false,
     },
+    projectRef : {
+        type: Schema.Types.ObjectId,
+        ref: "projects"
+    },
     comments: {
         type: [commentSchema]
     },
