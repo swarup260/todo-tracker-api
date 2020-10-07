@@ -143,8 +143,8 @@ module.exports.updateProject = async (request, response) => {
 
         const updateObject = {};
 
-        if (requestBody.update.projectName) {
-            updateObject.projectName = requestBody.update.projectName;
+        if (requestBody.update.name) {
+            updateObject.name = requestBody.update.name;
         }
 
         if (requestBody.update.description) {

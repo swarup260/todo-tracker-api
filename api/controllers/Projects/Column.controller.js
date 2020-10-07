@@ -1,4 +1,6 @@
-const { ObjectID } = require("mongodb");
+const {
+  ObjectID
+} = require("mongodb");
 const ProjectsModel = require("../../models/Projects.model");
 const NotesModel = require("../../models/Notes.model");
 const ProjectActivityModel = require("../../models/ProjectActivityHistory.model");
@@ -61,22 +63,18 @@ module.exports.addColumn = async (request, response) => {
       });
     }
 
-    const result = await ProjectsModel.findOneAndUpdate(
-      {
-        _id: requestBody.projectId,
-        "columns.name": {
-          $nin: [requestBody.update.name],
-        },
+    const result = await ProjectsModel.findOneAndUpdate({
+      _id: requestBody.projectId,
+      "columns.name": {
+        $nin: [requestBody.update.name],
       },
-      {
-        $push: {
-          columns: updateObject,
-        },
+    }, {
+      $push: {
+        columns: updateObject,
       },
-      {
-        new: true,
-      }
-    ).exec();
+    }, {
+      new: true,
+    }).exec();
     if (!result) {
       return response.status(400).json({
         status: false,
@@ -108,32 +106,41 @@ module.exports.addColumn = async (request, response) => {
 };
 
 module.exports.getColumn = async (request, response) => {
-    let projectID = await request.params.projectId;
-    try {
-        
-        const result = await ProjectsModel.findOne({  _id : ObjectID(projectID)  });
+  let projectID = await request.params.projectId;
+  try {
 
-        for (const key in result) {
-            if (key == "columns") {
-                console.log(result[key]);
+    const result = await ProjectsModel.findOne({
+      _id: ObjectID(projectID)
+    }).lean();
+    for (const key in result) {
+      if (key == "columns") {
+        let col = result[key];
+        for (let index = 0; index < col.length; index++) {
+          let element = col[index];
+          let notes = await NotesModel.find({
+            _id: {
+              $in: element.notes
             }
-        }
-
-        return response.status(200).json({
-            status : true,
-            message : "list of column",
-            data :  result
-        });
-
-    } catch (error) {
-        return response.status(400).json({
-            status: false,
-            message: error.toString(),
           });
+          col[index]["notes"] = notes;
+
+        }
+      }
     }
+
+    return response.status(200).json({
+      status: true,
+      message: "list of column",
+      data: result
+    });
+
+  } catch (error) {
+    return response.status(400).json({
+      status: false,
+      message: error.toString(),
+    });
+  }
 }
-
-
 
 module.exports.updateColumn = async (request, response) => {
   const requestBody = request.body;
@@ -182,18 +189,14 @@ module.exports.updateColumn = async (request, response) => {
       updateObject["columns.$.position"] = requestBody.update.position;
     }
 
-    const result = await ProjectsModel.findOneAndUpdate(
-      {
-        _id: requestBody.projectId,
-        "columns._id": ObjectID(requestBody.columnId),
-      },
-      {
-        $set: updateObject,
-      },
-      {
-        new: true,
-      }
-    ).exec();
+    const result = await ProjectsModel.findOneAndUpdate({
+      _id: requestBody.projectId,
+      "columns._id": ObjectID(requestBody.columnId),
+    }, {
+      $set: updateObject,
+    }, {
+      new: true,
+    }).exec();
     if (!result) {
       return response.status(400).json({
         status: false,
@@ -235,22 +238,18 @@ module.exports.deleteColumn = async (request, response) => {
       });
     }
 
-    const result = await ProjectsModel.findOneAndUpdate(
-      {
-        _id: projectID,
-        "columns._id": columnID,
-      },
-      {
-        $pull: {
-          columns: {
-            _id: columnID,
-          },
+    const result = await ProjectsModel.findOneAndUpdate({
+      _id: projectID,
+      "columns._id": columnID,
+    }, {
+      $pull: {
+        columns: {
+          _id: columnID,
         },
       },
-      {
-        new: true,
-      }
-    ).exec();
+    }, {
+      new: true,
+    }).exec();
     if (!result) {
       return response.status(400).json({
         status: false,
