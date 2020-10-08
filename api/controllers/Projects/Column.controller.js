@@ -2,8 +2,8 @@ const {
   ObjectID
 } = require("mongodb");
 const ProjectsModel = require("../../models/Projects.model");
-const NotesModel = require("../../models/Notes.model");
 const ProjectActivityModel = require("../../models/ProjectActivityHistory.model");
+const projectHelper = require('../../helpers/Project.helper')
 
 module.exports.addColumn = async (request, response) => {
   const requestBody = request.body;
@@ -95,7 +95,7 @@ module.exports.addColumn = async (request, response) => {
     return response.status(200).json({
       status: true,
       message: "columns added successfully",
-      data: result,
+      data: await projectHelper.getProjectById(requestBody.projectId),
     });
   } catch (error) {
     return response.status(400).json({
@@ -109,24 +109,7 @@ module.exports.getColumn = async (request, response) => {
   let projectID = await request.params.projectId;
   try {
 
-    const result = await ProjectsModel.findOne({
-      _id: ObjectID(projectID)
-    }).lean();
-    for (const key in result) {
-      if (key == "columns") {
-        let col = result[key];
-        for (let index = 0; index < col.length; index++) {
-          let element = col[index];
-          let notes = await NotesModel.find({
-            _id: {
-              $in: element.notes
-            }
-          });
-          col[index]["notes"] = notes;
-
-        }
-      }
-    }
+    const result = await projectHelper.getProjectById(projectID);
 
     return response.status(200).json({
       status: true,
