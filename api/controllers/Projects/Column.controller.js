@@ -32,9 +32,11 @@ module.exports.addColumn = async (request, response) => {
       });
     }
 
+    console.log(requestBody);
+    console.log(requestBody.update.position == "");
+    console.log(typeof requestBody.update.position);
     if (
-      !requestBody.update.position ||
-      requestBody.update.position == "" ||
+      requestBody.update.position == "" &&
       typeof requestBody.update.position != "number"
     ) {
       return response.status(400).json({
@@ -47,6 +49,9 @@ module.exports.addColumn = async (request, response) => {
       name: requestBody.update.name,
       position: requestBody.update.position,
     };
+    if (requestBody.update.color) {
+      updateObject["color"] = requestBody.update.color;
+    }
 
     const project = await ProjectsModel.findById(requestBody.projectId);
     if (!project) {
@@ -98,6 +103,7 @@ module.exports.addColumn = async (request, response) => {
       data: await projectHelper.getProjectById(requestBody.projectId),
     });
   } catch (error) {
+    console.log(error);
     return response.status(400).json({
       status: false,
       message: error,

@@ -10,6 +10,9 @@ const columnsSchema = new Schema({
     type: String,
     required: true,
   },
+  color: {
+    type: String,
+  },
   position: {
     type: Number,
     required: false,
