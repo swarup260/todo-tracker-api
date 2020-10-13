@@ -36,16 +36,6 @@ module.exports.addNote = async (request, response) => {
       });
     }
 
-    if (
-      !requestBody.update.position ||
-      requestBody.update.position == "" ||
-      typeof requestBody.update.position != "number"
-    ) {
-      return response.status(400).json({
-        status: false,
-        message: "position required and must be a number",
-      });
-    }
 
     if (
       !requestBody.update.columnRef ||
@@ -71,7 +61,6 @@ module.exports.addNote = async (request, response) => {
     }
     const updateObject = {
       name: requestBody.update.name,
-      position: requestBody.update.position,
       projectRef: requestBody.projectId,
     };
 
@@ -221,10 +210,6 @@ module.exports.updateNote = async (request, response) => {
 
     if (requestBody.update.description) {
       updateObject["description"] = requestBody.update.description;
-    }
-
-    if (requestBody.update.position) {
-      updateObject["position"] = requestBody.update.position;
     }
 
     /* Change Column */

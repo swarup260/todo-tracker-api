@@ -5,6 +5,54 @@ const ProjectsModel = require("../../models/Projects.model");
 const ProjectActivityModel = require("../../models/ProjectActivityHistory.model");
 const projectHelper = require('../../helpers/Project.helper')
 
+const multiUpdate = async (data) => {
+
+  try {
+
+    let response = [];
+    const columnsUpdate = data.cols;
+    for (let index = 0; index < columnsUpdate.length; index++) {
+      const col = columnsUpdate[index];
+      const updateObject = {};
+      if (col.update.name) {
+        updateObject["columns.$.name"] = col.update.name
+      }
+      if (col.update.hasOwnProperty('position')) {
+        updateObject["columns.$.position"] = col.update.position;
+      }
+
+      const result = await ProjectsModel.findOneAndUpdate({
+        _id: data.projectId,
+        "columns._id": ObjectID(col.columnId),
+      }, {
+        $set: updateObject,
+      }, {
+        new: true,
+      }).exec();
+
+      if (result) {
+
+        response.push(result);
+      }
+
+    }
+
+
+    return {
+      status: true,
+      message: "Columns Update Successfully",
+      data: response
+    };
+
+  } catch (error) {
+    return {
+      status: false,
+      message: error.toString(),
+    };
+  }
+
+}
+
 module.exports.addColumn = async (request, response) => {
   const requestBody = request.body;
   const userObjectID = request.userData._id;
@@ -133,6 +181,7 @@ module.exports.getColumn = async (request, response) => {
 
 module.exports.updateColumn = async (request, response) => {
   const requestBody = request.body;
+  const multi = request.query._multi;
   try {
     if (typeof requestBody != "object") {
       return response.status(400).json({
@@ -152,6 +201,13 @@ module.exports.updateColumn = async (request, response) => {
       });
     }
 
+    /* multi update */
+    if (multi) {
+      const result = await multiUpdate(requestBody);
+      let statusCode = result.status ? 200 : 400;
+      return response.status(statusCode).json(result);
+    }
+
     if (!requestBody.columnId || !ObjectID.isValid(requestBody.columnId)) {
       return response.status(400).json({
         status: false,
@@ -159,24 +215,20 @@ module.exports.updateColumn = async (request, response) => {
       });
     }
 
-    if (
-      !requestBody.update.name ||
-      requestBody.update.name == "" ||
-      typeof requestBody.update.name != "string"
-    ) {
-      return response.status(400).json({
-        status: false,
-        message: "name required and must be a string",
-      });
+    const updateObject = {};
+
+    if (requestBody.update.position) {
+      updateObject["columns.$.name"] = requestBody.update.name;
     }
-
-    const updateObject = {
-      "columns.$.name": requestBody.update.name,
-    };
-
     if (requestBody.update.position) {
       updateObject["columns.$.position"] = requestBody.update.position;
     }
+
+    if (requestBody.update.notes && requestBody.update.notes.constructor.name == "Array") {
+      updateObject["columns.$.notes"] = requestBody.update.notes;
+    }
+
+
 
     const result = await ProjectsModel.findOneAndUpdate({
       _id: requestBody.projectId,
@@ -199,9 +251,10 @@ module.exports.updateColumn = async (request, response) => {
       data: result,
     });
   } catch (error) {
+    console.log(error);
     return response.status(400).json({
       status: false,
-      message: error,
+      message: error.toString(),
     });
   }
 };

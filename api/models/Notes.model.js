@@ -28,11 +28,7 @@ const notesSchema = new Schema({
     description: {
         type: String
     },
-    position: {
-        type: Number,
-        required: false,
-    },
-    projectRef : {
+    projectRef: {
         type: Schema.Types.ObjectId,
         ref: "projects"
     },
