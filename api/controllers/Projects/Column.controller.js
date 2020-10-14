@@ -165,6 +165,8 @@ module.exports.getColumn = async (request, response) => {
 
     const result = await projectHelper.getProjectById(projectID);
 
+    console.log(result);
+
     return response.status(200).json({
       status: true,
       message: "list of column",

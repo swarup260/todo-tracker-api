@@ -13,7 +13,10 @@ module.exports.getProjectById = async (id) => {
                 }
             },
             {
-                $unwind: '$columns'
+                $unwind: {
+                    "path" : "$columns",
+                    "preserveNullAndEmptyArrays" : true
+                }
             },
             {
                 $sort: {
@@ -35,6 +38,7 @@ module.exports.getProjectById = async (id) => {
                 }
             }
         ]);
+        console.log(mongoResult);
         const result = mongoResult[0];
 
         for (const key in result) {
