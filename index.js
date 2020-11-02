@@ -32,6 +32,10 @@ const io = require("socket.io")(http);
 io.on("connection", async (socket) => {
   console.log("User Connection");
   socket.emit("connected", "You Are Online");
+  socket.on("chat_message", async (data) => {
+    // console.log(data);
+    socket.broadcast.emit("chat_message", data);
+  });
 });
 
 /* Test Routes */
@@ -39,8 +43,11 @@ app.get(
   "/",
   async (request, response) =>
     await response
-      .status(200)
-      .json({ status: true, message: "Express Working" })
+    .status(200)
+    .json({
+      status: true,
+      message: "Express Working"
+    })
 );
 
 /* Run the Express */
@@ -50,8 +57,7 @@ http.listen(config.PORT, () =>
 
 /* Mongoose Setting */
 mongoose.connect(
-  config.MONGODB_URI,
-  {
+  config.MONGODB_URI, {
     useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true,
