@@ -25,15 +25,27 @@ app.use("/habit", habitRoutes);
 
 /* Socket.io */
 const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const io = require("socket.io")(http, { transports: ["websocket", "polling"] });
 
 /* socket methods */
-
+const Users = require('./api/models/Users.model')
+const users = new Users();
 io.on("connection", async (socket) => {
   console.log("User Connection");
-  socket.emit("connected", "You Are Online");
+  
+  /* user */
+
+  socket.on("new_user_connected",(data) => {
+      users.addUser(data);
+      socket.broadcast.emit("user_connected",data);
+      console.log(users.usersList());
+  });
+
+  // socket.on("disconnect", () => {
+  //   socket.emit("disconnect", "Server Down");
+  // });
+
   socket.on("chat_message", async (data) => {
-    // console.log(data);
     socket.broadcast.emit("chat_message", data);
   });
 });
@@ -42,11 +54,9 @@ io.on("connection", async (socket) => {
 app.get(
   "/",
   async (request, response) =>
-    await response
-    .status(200)
-    .json({
+    await response.status(200).json({
       status: true,
-      message: "Express Working"
+      message: "Express Working",
     })
 );
 
@@ -57,7 +67,8 @@ http.listen(config.PORT, () =>
 
 /* Mongoose Setting */
 mongoose.connect(
-  config.MONGODB_URI, {
+  config.MONGODB_URI,
+  {
     useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true,
