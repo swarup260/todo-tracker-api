@@ -28,25 +28,18 @@ const http = require("http").createServer(app);
 const io = require("socket.io")(http, { transports: ["websocket", "polling"] });
 
 /* socket methods */
-const Users = require('./api/models/Users.model')
-const users = new Users();
 io.on("connection", async (socket) => {
   console.log("User Connection");
   
-  /* user */
-
-  socket.on("new_user_connected",(data) => {
-      users.addUser(data);
-      socket.broadcast.emit("user_connected",data);
-      console.log(users.usersList());
-  });
-
   // socket.on("disconnect", () => {
   //   socket.emit("disconnect", "Server Down");
   // });
 
   socket.on("chat_message", async (data) => {
-    socket.broadcast.emit("chat_message", data);
+    socket.broadcast.emit("chat_message", {message : data , isSend : false , time : new Date()});
+  });
+  socket.on("user_typing", async (data) => {
+    socket.broadcast.emit("user_typing", data);
   });
 });
 
