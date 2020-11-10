@@ -26,27 +26,14 @@ app.use("/habit", habitRoutes);
 /* Socket.io */
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, { transports: ["websocket", "polling"] });
-
+const onConnect = require("./api/controllers/SocketEvent.controller");
 /* socket methods */
-io.on("connection", async (socket) => {
-  console.log("User Connection");
-  
-  // socket.on("disconnect", () => {
-  //   socket.emit("disconnect", "Server Down");
-  // });
-
-  socket.on("chat_message", async (data) => {
-    socket.broadcast.emit("chat_message", {message : data , isSend : false , time : new Date()});
-  });
-  socket.on("user_typing", async (data) => {
-    socket.broadcast.emit("user_typing", data);
-  });
-});
+io.on("connection", onConnect);
 
 /* Test Routes */
 app.get(
   "/",
-  async (request, response) =>
+  async (_request, response) =>
     await response.status(200).json({
       status: true,
       message: "Express Working",
@@ -67,7 +54,7 @@ mongoose.connect(
     useUnifiedTopology: true,
     useFindAndModify: false,
   },
-  (error, db) => {
+  (error, _db) => {
     if (error) throw error;
     console.log(`MongoDB Running At PORT ${config.MONGODB_PORT} `);
   }
