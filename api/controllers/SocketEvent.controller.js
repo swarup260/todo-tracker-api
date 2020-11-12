@@ -1,6 +1,5 @@
 /* custom dependencies  */
 const { getFormatedMessage } = require("../helpers/function.helper");
-const io = require('socket.io');
 /* constants */
 const EVENTS = {
   CHAT_MESSAGE: "chat_message",
@@ -35,8 +34,7 @@ const onConnect = async (socket) => {
       socket.broadcast.emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
     }
     if (payload.roomName) {
-      console.log(payload.roomName);
-      io.in(payload.roomName).broadcast.emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
+      socket.to(payload.roomName).emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
       // io.in
     }
   });
