@@ -1,3 +1,7 @@
+/* dependencies  */
+const moment = require("moment");
+
+/* custom dependencies  */
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const userModel = require('../models/User.model');
@@ -21,4 +25,13 @@ exports.userExists = async data => {
         throw new Error("user is  disable");
     }
     return await user;
+}
+
+exports.getFormatedMessage = ({ message , user ,roomName }) => {
+    return {
+        message : message,
+        user : user,
+        room :  roomName,
+        time : moment().format("HH:MM a")
+    }
 }

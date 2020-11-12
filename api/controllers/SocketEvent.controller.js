@@ -1,5 +1,7 @@
-const moment = require("moment");
-
+/* custom dependencies  */
+const { getFormatedMessage } = require("../helpers/function.helper");
+const io = require('socket.io');
+/* constants */
 const EVENTS = {
   CHAT_MESSAGE: "chat_message",
   USER_TYPING: "user_typing",
@@ -8,67 +10,35 @@ const EVENTS = {
   JOIN_ROOM: "join_room",
 };
 const ROOMS = [];
+
+/* main events */
 const onConnect = async (socket) => {
-  console.log("User Connection");
-
-  socket.on(EVENTS.CREATE_ROOM, async (data) => {
-    console.log(data);
-    if (!ROOMS.includes(data)) {
-      socket.join(data);
-      ROOMS.push(data);
+  /* create rooms */
+  socket.on(EVENTS.CREATE_ROOM, ({ roomName }) => {
+    if (!ROOMS.includes(roomName)) {
+      socket.join(roomName);
     }
   });
 
-  socket.on(EVENTS.USER_JOIN, async ({ username, room }) => {
-    const payload = {
-      message: `${username} joined`,
-      user: socket.id,
-      username: username,
-      time: moment().format("HH:MM a"),
-    };
-
-    if (room != "") {
-      socket.to(room).broadcast.emit(EVENTS.JOIN_ROOM, payload);
+  socket.on(EVENTS.JOIN_ROOM, ({ user, roomName }) => {
+    if (!roomName) {
+      socket.broadcast.emit(EVENTS.JOIN_ROOM, { message: `${user} join` });
     }
-    // if (room == "") {
-    //   socket.broadcast.emit(EVENTS.JOIN_ROOM, payload);
-    // }
+    if (roomName) {
+      socket.to(roomName).emit(EVENTS.JOIN_ROOM, { message: `${user} join` });
+    }
   });
 
-  /* Events */
-  socket.on(EVENTS.CHAT_MESSAGE, async ({ message, room, username }) => {
-    const payload = {
-      message: message,
-      user: socket.id,
-      username: username,
-      time: moment().format("HH:MM a"),
-    };
-    if (!room) {
-      socket.emit(EVENTS.CHAT_MESSAGE, payload);
-      socket.broadcast.emit(EVENTS.CHAT_MESSAGE, payload);
+  socket.on(EVENTS.CHAT_MESSAGE, (payload) => {
+    if (!payload.roomName) {
+      socket.emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
+      socket.broadcast.emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
     }
-    if (room) {
-      socket.to(room).emit(EVENTS.CHAT_MESSAGE, payload);
-      socket.to(room).broadcast.emit(EVENTS.CHAT_MESSAGE, payload);
+    if (payload.roomName) {
+      console.log(payload.roomName);
+      io.in(payload.roomName).broadcast.emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
+      // io.in
     }
-    // if (data.room) {
-    //   socket.to(data.room).emit(EVENTS.CHAT_MESSAGE, {
-    //     message: data,
-    //     user: socket.id,
-    //     time: moment().format("HH:MM a"),
-    //   });
-    // }
-    // if (data.room == undefined) {
-    //   socket.emit(EVENTS.CHAT_MESSAGE, {
-    //     message: data,
-    //     user: socket.id,
-    //     time: moment().format("HH:MM a"),
-    //   });
-    // }
-  });
-
-  socket.on(EVENTS.USER_TYPING, async (data) => {
-    socket.broadcast.emit(EVENTS.USER_TYPING, data);
   });
 };
 
