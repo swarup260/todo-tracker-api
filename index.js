@@ -1,63 +1,100 @@
-/* Include Dependencies */
-const Express = require("express");
-const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
-const config = require("./api/config");
-const cors = require("cors");
-/* Express App */
-const app = Express();
+// import io from "socket.io-client";
 
-/* Middlewares */
-app.use(bodyParser.json());
-app.use(cors());
+const BASE_URL = "http://localhost:3000";
 
-/* Routers */
+const socket = io(BASE_URL);
 
-const userRoutes = require("./api/routes/User.routes");
-const todoRoutes = require("./api/routes/Todo.routes");
-const projectRoutes = require("./api/routes/Projects.routes");
-const habitRoutes = require("./api/routes/Habit.routes");
+/* localStorage */
+const setUser = (name) => sessionStorage.setItem("username", name);
+const getUser = () => sessionStorage.getItem("username");
 
-app.use("/users", userRoutes);
-app.use("/todos", todoRoutes);
-app.use("/projects", projectRoutes);
-app.use("/habit", habitRoutes);
+const setRoom = (roomName) => sessionStorage.setItem("roomName", roomName);
+const getRoom = () => sessionStorage.getItem("roomName");
 
-/* Socket.io */
-const http = require("http").createServer(app);
-const io = require("socket.io")(http, { transports: ["websocket", "polling"] });
-const onConnect = require("./api/controllers/SocketEvent.controller");
-/* socket methods */
-io.on("connection", onConnect);
+/* selectors */
+const joinScreen = document.querySelector("#joinScreen");
+const chatBoxScreen = document.querySelector("#chatBoxScreen");
+const joinChatBtn = document.querySelector("#joinChat");
+const userNameInput = document.querySelector("#userName");
+const roomNameInput = document.querySelector("#roomName");
 
-/* Test Routes */
-app.get(
-  "/",
-  async (_request, response) =>
-    await response.status(200).json({
-      status: true,
-      message: "Express Working",
-    })
-);
+const chatHistoryBox = document.querySelector("#chatHistory");
+const messageInput = document.querySelector("#message");
+const sendMessageBtn = document.querySelector("#sendMessage");
+const cardTitle = document.querySelector("span#chatBoxTitle");
 
-/* Run the Express */
-http.listen(config.PORT, () =>
-  console.log(`Server Running At PORT ${config.PORT} `)
-);
-
-/* Mongoose Setting */
-mongoose.connect(
-  config.MONGODB_URI,
-  {
-    useCreateIndex: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-  },
-  (error, _db) => {
-    if (error) throw error;
-    console.log(`MongoDB Running At PORT ${config.MONGODB_PORT} `);
+joinChatBtn.addEventListener("click", function () {
+  if (userNameInput.value != "") {
+    setUser(userNameInput.value);
+    joinScreen.style.display = "none";
+    chatBoxScreen.style.display = "block";
+    if (roomNameInput.value) {
+      socket.emit("create_room", {roomName : roomNameInput.value});
+      setRoom(roomNameInput.value);
+      cardTitle.textContent = `CHAT ROOM NAME :  ${roomNameInput.value}`
+    }
+    socket.emit("join_room", {
+      user : userNameInput.value,
+      roomName: roomNameInput.value,
+    });
   }
-);
+  return false;
+});
 
-mongoose.Promise = global.Promise;
+/* Messaging Methods */
+messageInput.addEventListener("keydown", function (event) {
+  if (event.key == "Enter" && this.value != "") {
+    sendMessage(messageInput);
+  }
+});
+
+sendMessageBtn.addEventListener("click", function (event) {
+  if (messageInput.value != "") {
+    sendMessage(messageInput);
+  }
+});
+
+function sendMessage(selector) {
+  socket.emit("chat_message", {
+    message: selector.value,
+    user: getUser(),
+    roomName: getRoom(),
+  });
+  selector.value = "";
+}
+
+function addMessageHTML(data) {
+  let li = document.createElement("li");
+  li.innerHTML = `
+  <span class="message-sub-title" >${data.user}</span>
+  <span class="message-title" >${data.message}</span>
+  <span class="message-sub-title">${data.time}</span>
+  `;
+  li.className =
+    data.user == getUser()
+      ? "chat-message align-right"
+      : "chat-message align-left";
+  chatHistoryBox.appendChild(li);
+}
+function addInfoMessageHTML(data) {
+  let li = document.createElement("li");
+  li.textContent = data.message;
+  li.className = "chat-message align-center";
+  chatHistoryBox.appendChild(li);
+}
+
+/* socket event */
+socket.on("connected", (data) => {
+  cardTitle.textContent = data;
+});
+
+// socket.on("disconnect", (data) => {
+//   cardTitle.textContent = data;
+// });
+
+socket.on("chat_message", (data) => {
+  addMessageHTML(data);
+});
+socket.on("join_room", (data) => {
+  addInfoMessageHTML(data);
+});

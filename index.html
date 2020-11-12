@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+     <!--Import Google Icon Font-->
+     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+     <!--Import materialize.css-->
+    <link rel="stylesheet" href="./node_modules/materialize-css/dist/css/materialize.min.css" media="screen,projection">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="row" id="joinScreen">
+      <div class="col s12 m12">
+        <div class="card blue-grey">
+          <div class="card-content white-text">
+            <span class="card-title">Join Chat</span>
+            <div class="row">
+              <form class="col s12">
+                <div class="row">
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">account_circle</i>
+                    <input id="userName" type="text" class="validate">
+                    <label for="userName">First Name</label>
+                  </div>
+                <div class="row">
+                  <div class="input-field col s6">
+                    <i class="material-icons prefix">account_circle</i>
+                    <input id="roomName" type="text" class="validate">
+                    <label for="roomName">Room Name</label>
+                  </div>
+                  <div class="input-field col s6">
+                    <a class="waves-effect waves-light btn" id="joinChat">Join</a>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- chat box -->
+    <div class="row" id="chatBoxScreen" style="display: none;">
+        <div class="col s12 m12">
+          <div class="card blue-grey">
+              <div class="card-content white-text chatbox">
+                <span class="card-title" id="chatBoxTitle">Public Chat Room</span>
+              <ul id="chatHistory">
+              </ul>
+            </div>
+            <div class="card-action">
+                <div class="row">
+                    <div class="col s12">
+                      <div class="row">
+                        <div class="input-field col s10">
+                          <input id="message" type="text" class="validate">
+                          <label for="message">message</label>
+                        </div>
+                        <div class="input-field col s2">
+                            <a class="waves-effect waves-light btn" id="sendMessage" ><i class="material-icons">send</i></a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+            </div>
+          </div>
+        </div>
+    </div>    
+    <!-- end of chat box -->
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js"></script>
+    <script src="./node_modules/materialize-css/dist/js/materialize.min.js"></script>
+    <script src="./index.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+.chatbox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  height: 450px;
+}
+.chat-message {
+    margin: 10px 5px;
+    padding: 5px 10px;
+    font-size: 15px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+}
+.align-right{
+    background-color: #03dac6;
+    text-align: right;
+    float: right;
+    clear: both;
+}
+.align-left{
+    background-color:#018786;
+    text-align: left;
+    float: left;
+    clear: both;
+}
+
+.align-center{
+    background-color:#018786;
+    text-align: center;
+    clear: both;
+}
+
+.message-sub-title {
+    font-size: 12px;
+}
+.message-title {
+    color: black;
+}
