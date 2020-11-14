@@ -1,5 +1,5 @@
-import * as func from "./helpers";
-import * as sessionStorage from "./sessionStorage";
+import { addMessageHTML, addInfoMessageHTML } from "./helpers";
+import { getUser, getRoom, setUser, setRoom } from "./sessionStorage";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -26,26 +26,25 @@ const cardTitle = document.querySelector("span#chatBoxTitle");
 /*                 DOM EVENTS                                 */
 /* ---------------------------------------------------------- */
 joinChatBtn.addEventListener("click", function () {
-  /* set title */
-  cardTitle.textContent = `${
-    cardTitle.textContent
-  } || User :  ${sessionStorage.getUser()}`;
   /* set user  */
   if (userNameInput.value != "") {
-    sessionStorage.setUser(userNameInput.value);
+    setUser(userNameInput.value);
     joinScreen.style.display = "none";
     chatBoxScreen.style.display = "block";
+
+    /* set title */
+    cardTitle.textContent = `${cardTitle.textContent} || User :  ${getUser()}`;
 
     /* set room */
     if (roomNameInput.value) {
       socket.emit("create_room", { roomName: roomNameInput.value });
-      sessionStorage.setRoom(roomNameInput.value);
-      cardTitle.textContent = `CHAT ROOM NAME :  ${sessionStorage.getRoom()} || User :  ${sessionStorage.getUser()}`;
+      setRoom(roomNameInput.value);
+      cardTitle.textContent = `CHAT ROOM NAME :  ${getRoom()} || User :  ${getUser()}`;
     }
     /* fire join user event */
     socket.emit("join_room", {
       user: userNameInput.value,
-      roomName: sessionStorage.getRoom(),
+      roomName: getRoom(),
     });
   }
   return false;
@@ -53,23 +52,33 @@ joinChatBtn.addEventListener("click", function () {
 
 messageInput.addEventListener("keydown", function (event) {
   if (event.key == "Enter" && this.value != "") {
-    func.sendMessage(messageInput);
+    sendMessage(messageInput);
   }
 });
 
 sendMessageBtn.addEventListener("click", function () {
   if (messageInput.value != "") {
-    func.sendMessage(messageInput);
+    sendMessage(messageInput);
   }
 });
+
+
+function sendMessage(selector) {
+  socket.emit("chat_message", {
+    message: selector.value,
+    user: getUser(),
+    roomName: getRoom(),
+  });
+  selector.value = "";
+}
 
 /* ---------------------------------------------------------- */
 /*                 SOCKET LISTENER EVENT                      */
 /* ---------------------------------------------------------- */
 socket.on("join_room", (data) => {
-  func.addInfoMessageHTML(data, chatHistoryBox);
+  addInfoMessageHTML(data, chatHistoryBox);
 });
 
 socket.on("chat_message", (data) => {
-  func.addMessageHTML(data, chatHistoryBox);
+  addMessageHTML(data, chatHistoryBox);
 });

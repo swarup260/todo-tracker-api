@@ -1,14 +1,9 @@
 /* ---------------------------------------------------------- */
 /*             HELPERS METHOD                                 */
 /* ---------------------------------------------------------- */
-function sendMessage(selector) {
-  socket.emit("chat_message", {
-    message: selector.value,
-    user: getUser(),
-    roomName: getRoom(),
-  });
-  selector.value = "";
-}
+import { getUser } from "./sessionStorage";
+
+
 
 function addMessageHTML(data, selector) {
   let li = document.createElement("li");
@@ -33,8 +28,4 @@ function addInfoMessageHTML(data, selector) {
   selector.appendChild(li);
 }
 
-export default {
-  sendMessage,
-  addMessageHTML,
-  addInfoMessageHTML,
-};
+export { addMessageHTML, addInfoMessageHTML };

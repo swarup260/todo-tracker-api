@@ -8,9 +8,4 @@ const getUser = () => sessionStorage.getItem("username");
 const setRoom = (roomName) => sessionStorage.setItem("roomName", roomName);
 const getRoom = () => sessionStorage.getItem("roomName");
 
-export default {
-  setUser,
-  getUser,
-  setRoom,
-  getRoom,
-};
+export { setUser, getUser, setRoom, getRoom };
