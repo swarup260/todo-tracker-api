@@ -1,17 +1,16 @@
-// import io from "socket.io-client";
+import * as func from "./helpers";
+import * as sessionStorage from "./sessionStorage";
 
 const BASE_URL = "http://localhost:3000";
 
+/* ---------------------------------------------------------- */
+/*                 SOCKET INITIALIZATION                      */
+/* ---------------------------------------------------------- */
 const socket = io(BASE_URL);
 
-/* localStorage */
-const setUser = (name) => sessionStorage.setItem("username", name);
-const getUser = () => sessionStorage.getItem("username");
-
-const setRoom = (roomName) => sessionStorage.setItem("roomName", roomName);
-const getRoom = () => sessionStorage.getItem("roomName");
-
-/* selectors */
+/* ---------------------------------------------------------- */
+/*                 SELECTORS                                  */
+/* ---------------------------------------------------------- */
 const joinScreen = document.querySelector("#joinScreen");
 const chatBoxScreen = document.querySelector("#chatBoxScreen");
 const joinChatBtn = document.querySelector("#joinChat");
@@ -23,78 +22,54 @@ const messageInput = document.querySelector("#message");
 const sendMessageBtn = document.querySelector("#sendMessage");
 const cardTitle = document.querySelector("span#chatBoxTitle");
 
+/* ---------------------------------------------------------- */
+/*                 DOM EVENTS                                 */
+/* ---------------------------------------------------------- */
 joinChatBtn.addEventListener("click", function () {
+  /* set title */
+  cardTitle.textContent = `${
+    cardTitle.textContent
+  } || User :  ${sessionStorage.getUser()}`;
+  /* set user  */
   if (userNameInput.value != "") {
-    setUser(userNameInput.value);
+    sessionStorage.setUser(userNameInput.value);
     joinScreen.style.display = "none";
     chatBoxScreen.style.display = "block";
+
+    /* set room */
     if (roomNameInput.value) {
-      socket.emit("create_room", {roomName : roomNameInput.value});
-      setRoom(roomNameInput.value);
-      cardTitle.textContent = `CHAT ROOM NAME :  ${roomNameInput.value}`
+      socket.emit("create_room", { roomName: roomNameInput.value });
+      sessionStorage.setRoom(roomNameInput.value);
+      cardTitle.textContent = `CHAT ROOM NAME :  ${sessionStorage.getRoom()} || User :  ${sessionStorage.getUser()}`;
     }
+    /* fire join user event */
     socket.emit("join_room", {
-      user : userNameInput.value,
-      roomName: roomNameInput.value,
+      user: userNameInput.value,
+      roomName: sessionStorage.getRoom(),
     });
   }
   return false;
 });
 
-/* Messaging Methods */
 messageInput.addEventListener("keydown", function (event) {
   if (event.key == "Enter" && this.value != "") {
-    sendMessage(messageInput);
+    func.sendMessage(messageInput);
   }
 });
 
-sendMessageBtn.addEventListener("click", function (event) {
+sendMessageBtn.addEventListener("click", function () {
   if (messageInput.value != "") {
-    sendMessage(messageInput);
+    func.sendMessage(messageInput);
   }
 });
 
-function sendMessage(selector) {
-  socket.emit("chat_message", {
-    message: selector.value,
-    user: getUser(),
-    roomName: getRoom(),
-  });
-  selector.value = "";
-}
-
-function addMessageHTML(data) {
-  let li = document.createElement("li");
-  li.innerHTML = `
-  <span class="message-sub-title" >${data.user}</span>
-  <span class="message-title" >${data.message}</span>
-  <span class="message-sub-title">${data.time}</span>
-  `;
-  li.className =
-    data.user == getUser()
-      ? "chat-message align-right"
-      : "chat-message align-left";
-  chatHistoryBox.appendChild(li);
-}
-function addInfoMessageHTML(data) {
-  let li = document.createElement("li");
-  li.textContent = data.message;
-  li.className = "chat-message align-center";
-  chatHistoryBox.appendChild(li);
-}
-
-/* socket event */
-socket.on("connected", (data) => {
-  cardTitle.textContent = data;
+/* ---------------------------------------------------------- */
+/*                 SOCKET LISTENER EVENT                      */
+/* ---------------------------------------------------------- */
+socket.on("join_room", (data) => {
+  func.addInfoMessageHTML(data, chatHistoryBox);
 });
-
-// socket.on("disconnect", (data) => {
-//   cardTitle.textContent = data;
-// });
 
 socket.on("chat_message", (data) => {
-  addMessageHTML(data);
-});
-socket.on("join_room", (data) => {
-  addInfoMessageHTML(data);
+  func.addMessageHTML(data, chatHistoryBox);
 });
