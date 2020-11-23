@@ -1,5 +1,13 @@
-import { addMessageHTML, addInfoMessageHTML } from "./helpers";
-import { getUser, getRoom, setUser, setRoom } from "./sessionStorage";
+import {
+  addMessageHTML,
+  addInfoMessageHTML
+} from "./helpers";
+import {
+  getUser,
+  getRoom,
+  setUser,
+  setRoom
+} from "./sessionStorage";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -31,16 +39,14 @@ joinChatBtn.addEventListener("click", function () {
     setUser(userNameInput.value);
     joinScreen.style.display = "none";
     chatBoxScreen.style.display = "block";
-
-    /* set title */
-    cardTitle.textContent = `${cardTitle.textContent} || User :  ${getUser()}`;
-
+    
     /* set room */
-    if (roomNameInput.value) {
-      socket.emit("create_room", { roomName: roomNameInput.value });
-      setRoom(roomNameInput.value);
-      cardTitle.textContent = `CHAT ROOM NAME :  ${getRoom()} || User :  ${getUser()}`;
-    }
+    let defaultChatRoom = roomNameInput.value || "public chat";
+    socket.emit("create_room", {
+      roomName: defaultChatRoom
+    });
+    setRoom(defaultChatRoom);
+    cardTitle.textContent = `CHAT ROOM NAME :  ${getRoom()} || User :  ${getUser()}`;
     /* fire join user event */
     socket.emit("join_room", {
       user: userNameInput.value,
@@ -81,4 +87,5 @@ socket.on("join_room", (data) => {
 
 socket.on("chat_message", (data) => {
   addMessageHTML(data, chatHistoryBox);
+  chatHistoryBox.scrollTo = chatHistoryBox.clientHeight;
 });
