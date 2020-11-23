@@ -1,5 +1,9 @@
+/* dependencies */
+const socketio = require('socket.io')
 /* custom dependencies  */
-const { getFormatedMessage } = require("../helpers/function.helper");
+const {
+  getFormatedMessage
+} = require("../helpers/function.helper");
 /* constants */
 const EVENTS = {
   CHAT_MESSAGE: "chat_message",
@@ -10,34 +14,36 @@ const EVENTS = {
 };
 const ROOMS = [];
 
-/* main events */
-const onConnect = async (socket) => {
-  /* create rooms */
-  socket.on(EVENTS.CREATE_ROOM, ({ roomName }) => {
-    if (!ROOMS.includes(roomName)) {
-      socket.join(roomName);
-    }
-  });
+const SOCKETS = {};
 
-  socket.on(EVENTS.JOIN_ROOM, ({ user, roomName }) => {
-    if (!roomName) {
-      socket.broadcast.emit(EVENTS.JOIN_ROOM, { message: `${user} join` });
-    }
-    if (roomName) {
-      socket.to(roomName).emit(EVENTS.JOIN_ROOM, { message: `${user} join` });
-    }
+SOCKETS.init = function (server) {
+  /* initialization socket */
+  const io = socketio(server, {
+    transports: ["websocket", "polling"]
   });
+  io.on("connection", async (socket) => {
+    /* create rooms */
+    socket.on(EVENTS.CREATE_ROOM, ({
+      roomName
+    }) => {
+      if (!ROOMS.includes(roomName)) {
+        socket.join(roomName);
+      }
+    });
 
-  socket.on(EVENTS.CHAT_MESSAGE, (payload) => {
-    if (!payload.roomName) {
-      socket.emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
-      socket.broadcast.emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
-    }
-    if (payload.roomName) {
-      socket.to(payload.roomName).emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
-      // io.in
-    }
-  });
-};
+    socket.on(EVENTS.JOIN_ROOM, ({
+      user,
+      roomName
+    }) => {
+      socket.to(roomName).emit(EVENTS.JOIN_ROOM, {
+        message: `${user} join`
+      });
+    });
 
-module.exports = onConnect;
+    socket.on(EVENTS.CHAT_MESSAGE, (payload) => {
+      io.in(payload.roomName).emit(EVENTS.CHAT_MESSAGE, getFormatedMessage(payload));
+    });
+  })
+}
+
+module.exports = SOCKETS;

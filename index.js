@@ -25,11 +25,9 @@ app.use("/habit", habitRoutes);
 
 /* Socket.io */
 const http = require("http").createServer(app);
-const io = require("socket.io")(http, { transports: ["websocket", "polling"] });
-const onConnect = require("./api/controllers/SocketEvent.controller");
+const SOCKETS = require("./api/controllers/SocketEvent.controller");
 /* socket methods */
-io.on("connection", onConnect);
-
+SOCKETS.init(http);
 /* Test Routes */
 app.get(
   "/",
