@@ -219,11 +219,15 @@ module.exports.updateColumn = async (request, response) => {
 
     const updateObject = {};
 
-    if (requestBody.update.position) {
+    if (requestBody.update.name) {
       updateObject["columns.$.name"] = requestBody.update.name;
     }
+
     if (requestBody.update.position) {
       updateObject["columns.$.position"] = requestBody.update.position;
+    }
+    if (requestBody.update.color) {
+      updateObject["columns.$.color"] = requestBody.update.color;
     }
 
     if (requestBody.update.notes && requestBody.update.notes.constructor.name == "Array") {

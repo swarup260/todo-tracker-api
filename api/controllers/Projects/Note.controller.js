@@ -81,7 +81,7 @@ module.exports.addNote = async (request, response) => {
       },
       {
         $addToSet: {
-          "columns.$.notes": newNotes._id,
+          "columns.$.notes": { noteId:newNotes._id , position :requestBody.update.position},
         },
       },
       {

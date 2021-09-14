@@ -8,35 +8,35 @@ module.exports.getProjectById = async (id) => {
     try {
 
         const mongoResult = await ProjectsModel.aggregate([{
-                $match: {
-                    _id: ObjectID(id)
-                }
-            },
-            {
-                $unwind: {
-                    "path" : "$columns",
-                    "preserveNullAndEmptyArrays" : true
-                }
-            },
-            {
-                $sort: {
-                    "columns.position": 1
-                }
-            },
-            {
-                $group: {
-                    _id: '$_id',
-                    name: {
-                        $first: "$name"
-                    },
-                    description: {
-                        $first: "$description"
-                    },
-                    "columns": {
-                        $push: "$columns"
-                    }
+            $match: {
+                _id: ObjectID(id)
+            }
+        },
+        {
+            $unwind: {
+                "path": "$columns",
+                "preserveNullAndEmptyArrays": true
+            }
+        },
+        {
+            $sort: {
+                "columns.position": 1
+            }
+        },
+        {
+            $group: {
+                _id: '$_id',
+                name: {
+                    $first: "$name"
+                },
+                description: {
+                    $first: "$description"
+                },
+                "columns": {
+                    $push: "$columns"
                 }
             }
+        }
         ]);
         console.log(mongoResult);
         const result = mongoResult[0];
@@ -47,7 +47,8 @@ module.exports.getProjectById = async (id) => {
                 for (let index = 0; index < col.length; index++) {
                     let element = col[index];
                     if (element.notes.length > 0) {
-                        col[index]["notes"] = await getNotes(element, col, index);
+                        col[index]["notes"] = await getNotes(element);
+                        console.log(col[index]["notes"].map(x => x.name));
                     }
 
                 }
@@ -59,22 +60,20 @@ module.exports.getProjectById = async (id) => {
     }
 }
 
-async function getNotes(element, col, index) {
-    const idIndexes = {};
-    const notesSort = [];
+async function getNotes(element) {
+    let noteIds = element.notes.map(note => note.noteId)
     let notes = await NotesModel.find({
         _id: {
-            $in: element.notes.map(item => item.noteId)
+            $in: noteIds
         }
     });
+    let notesListHashList = {};
+    notes.forEach(note => {
+        notesListHashList[note._id] = note
+    })
+    let notesOrderByPostition = []
 
+    noteIds.forEach(id => notesOrderByPostition.push(notesListHashList[id]))
 
-    for (let index = 0; index < notes.length; index++) {
-        const element = notes[index];
-        idIndexes[element._id] = element;
-    }
-    element.notes.forEach(element => {
-        notesSort.push(idIndexes[element.noteId]);
-    });
-    return notesSort;
+    return notesOrderByPostition
 }
