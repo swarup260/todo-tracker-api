@@ -194,67 +194,33 @@ module.exports.updateNote = async (request, response) => {
     }
 
     if (
-      !requestBody.update.name ||
-      requestBody.update.name == "" ||
+      requestBody.update.name && 
       typeof requestBody.update.name != "string"
     ) {
       return response.status(400).json({
         status: false,
-        message: "name required and must be a string",
+        message: "name  must be a string",
       });
     }
 
-    const updateObject = {
-      name: requestBody.update.name,
-    };
+    if (
+      requestBody.update.description && 
+      typeof requestBody.update.description != "string"
+    ) {
+      return response.status(400).json({
+        status: false,
+        message: "name  must be a string",
+      });
+    }
+
+    const updateObject = {};
+
+    if (requestBody.update.name) {
+      updateObject["name"] = requestBody.update.name;
+    }
 
     if (requestBody.update.description) {
       updateObject["description"] = requestBody.update.description;
-    }
-
-    /* Change Column */
-    if (requestBody.update.columnRef) {
-      // pull the note id from exists column if present
-      const pullResult = await ProjectsModel.findOneAndUpdate(
-        {
-          _id: requestBody.projectId,
-          "columns.notes": { $in: [requestBody.noteId] },
-        },
-        {
-          $pull: {
-            "columns.$.notes": { $in: [requestBody.noteId] },
-          },
-        }
-      );
-    
-    //   if (!pullResult) {
-    //     return response.status(400).json({
-    //       status: false,
-    //       message: "Fail to updated",
-    //     });
-    //   }
-      //push the note to new column
-      const pushResult = await ProjectsModel.findOneAndUpdate(
-        {
-          _id: requestBody.projectId,
-          "columns._id": requestBody.update.columnRef,
-        },
-        {
-          $addToSet: {
-            "columns.$.notes": requestBody.noteId,
-          },
-        },
-        {
-          new: true,
-        }
-      ).exec();
-
-      if (!pushResult) {
-        return response.status(400).json({
-          status: false,
-          message: "Fail to updated",
-        });
-      }
     }
 
     const result = await NotesModel.findOneAndUpdate(
@@ -267,6 +233,7 @@ module.exports.updateNote = async (request, response) => {
         new: true,
       }
     ).exec();
+    
     if (!result) {
       return response.status(400).json({
         status: false,
@@ -276,7 +243,7 @@ module.exports.updateNote = async (request, response) => {
 
     return response.status(200).json({
       status: true,
-      message: "Note added successfully",
+      message: "Note updated successfully",
       data: result,
     });
   } catch (error) {
@@ -288,19 +255,71 @@ module.exports.updateNote = async (request, response) => {
 };
 
 module.exports.deleteNote = async (request, response) => {
-  let id = await request.params.objectId;
-  const userObjectID = request.userData._id;
+  const {noteId ,projectRef , columnRef } = request.body;
 
   try {
-    if (!id || !ObjectID.isValid(id)) {
+    if (!noteId || !ObjectID.isValid(noteId)) {
       return response.status(400).json({
         status: false,
-        message: "id required and must be ObjectID",
+        message: "noteId required and must be ObjectID",
+      });
+    }
+
+    if (!projectRef || !ObjectID.isValid(projectRef)) {
+      return response.status(400).json({
+        status: false,
+        message: "projectRef required and must be ObjectID",
+      });
+    }
+
+    if (!columnRef || !ObjectID.isValid(columnRef)) {
+      return response.status(400).json({
+        status: false,
+        message: "columnRef required and must be ObjectID",
+      });
+    }
+
+    const project = await ProjectsModel.find(
+      {
+        _id: projectRef,
+        "columns._id": columnRef,
+      },
+      {_id: 0, 'columns.$': 1}
+      );
+
+    if (project.length == 0) {
+      return response.status(400).json({
+        status: false,
+        message: "project/column not found",
+      });
+    }
+
+    const notes = project[0].columns[0].notes.filter(note => note.noteId != noteId);
+
+    const updateNotes = await ProjectsModel.findOneAndUpdate(
+      {
+        _id: projectRef,
+        "columns._id": columnRef,
+      },
+      {
+        $set: {
+          "columns.$.notes": notes,
+        },
+      },
+      {
+        new: true,
+      }
+    ).exec();
+
+    if (!updateNotes) {
+      return response.status(400).json({
+        status: false,
+        message: "project/column failed to udpate",
       });
     }
 
     const result = await NotesModel.deleteOne({
-      _id: id,
+      _id: noteId,
     }).exec();
     if (!result) {
       return response.status(400).json({
@@ -308,6 +327,9 @@ module.exports.deleteNote = async (request, response) => {
         message: "Note Not Present",
       });
     }
+
+    /* update project Columns */
+
 
     // if (result) {
     //     await new ProjectActivityModel({

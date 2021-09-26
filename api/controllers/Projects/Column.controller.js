@@ -289,6 +289,7 @@ module.exports.deleteColumn = async (request, response) => {
     const result = await ProjectsModel.findOneAndUpdate({
       _id: projectID,
       "columns._id": columnID,
+      "columns.notes" : { $size : 0 }
     }, {
       $pull: {
         columns: {
@@ -301,7 +302,7 @@ module.exports.deleteColumn = async (request, response) => {
     if (!result) {
       return response.status(400).json({
         status: false,
-        message: "Columns Not Present",
+        message: "Columns Not Present or Notes Exist for current columnn",
       });
     }
 
