@@ -21,27 +21,18 @@ const multiUpdate = async (data) => {
         updateObject["columns.$.position"] = col.update.position;
       }
 
-      const result = await ProjectsModel.findOneAndUpdate({
-        _id: data.projectId,
+      await ProjectsModel.findOneAndUpdate({
+        _id: ObjectID(data.projectId),
         "columns._id": ObjectID(col.columnId),
       }, {
         $set: updateObject,
-      }, {
-        new: true,
       }).exec();
-
-      if (result) {
-
-        response.push(result);
-      }
-
     }
-
 
     return {
       status: true,
       message: "Columns Update Successfully",
-      data: response
+      data: await ProjectsModel.findById(ObjectID(data.projectId))
     };
 
   } catch (error) {
