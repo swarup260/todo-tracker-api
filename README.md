@@ -20,11 +20,11 @@ npm run dev  #dev server
 - [x] Todo Curd Api
 ### Version 1.2
 - [x] Habit Tracker Api
-- [ ] Project Management Api
-- [ ] Project Notes Api
+- [x] Project Management Api
+- [x] Project Notes Api
 ### Version 1.3
+- [x] Notes comment CRUD API
 - [ ] Project Activity Tracker integration in Project Management Api
-- [ ] Notes comment CRUD API
 ### Version 1.4
 - [ ] Todo Extended Deadline Tracker
 ### Version 1.5
@@ -33,5 +33,7 @@ npm run dev  #dev server
 
 
 
+## RoadMap Optiona
 
-
+- [ ] Docker
+- [ ] ElasticSearch
