@@ -96,7 +96,7 @@ module.exports.addComment = async (request, response) => {
             return response.status(200).json({
                 status: true,
                 message: "Comment added successfully",
-                data :result.comments
+                data :result
             });
         }
 
@@ -180,6 +180,7 @@ module.exports.updateComment = async (request, response) => {
             return response.status(200).json({
                 status: true,
                 message: "Comment udpate successfully",
+                data: result
             });
         }
 
@@ -231,6 +232,7 @@ module.exports.deleteComment = async (request, response) => {
             return response.status(200).json({
                 status: true,
                 message: "comment delete successfully",
+                data: result
             });
 
         }
