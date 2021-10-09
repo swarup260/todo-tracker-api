@@ -35,5 +35,5 @@ npm run dev  #dev server
 
 ## RoadMap Optiona
 
-- [ ] Docker
+- [X] Docker
 - [ ] ElasticSearch
