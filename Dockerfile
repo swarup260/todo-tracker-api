@@ -6,14 +6,20 @@ RUN mkdir -p /usr/src/app
 # Create app directory
 WORKDIR /usr/src/app
 
-
 COPY package*.json /usr/src/app/
 
-RUN npm i
+ARG NODE_ENV
+
+RUN if [ "$NODE_ENV" = "development" ]; \
+    then npm i; \
+    else npm i --only=production; \
+    fi
 
 # Bundle app source
 COPY . /usr/src/app/
 
-EXPOSE 3000
+ENV PORT=3000
 
-CMD [ "npm", "start" ]
+EXPOSE ${PORT}
+
+CMD [ "npm", "run","dev"]
