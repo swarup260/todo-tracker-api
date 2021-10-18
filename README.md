@@ -33,7 +33,25 @@ npm run dev  #dev server
 
 
 
-## RoadMap Optiona
+## RoadMap Optional
 
 - [X] Docker
 - [ ] ElasticSearch
+
+
+## JWT RSA Key Generated Command
+
+```bash
+
+ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
+# Don't add passphrase
+openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
+
+ssh-keygen -e -m PKCS8 -f jwtRS256.key.pub > jwtRS256pk.key.pub #Public key needs to be in PKCS8 (OpenSSL default) format. 
+
+```
+
+
+
+
+
