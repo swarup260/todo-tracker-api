@@ -51,6 +51,16 @@ ssh-keygen -e -m PKCS8 -f jwtRS256.key.pub > jwtRS256pk.key.pub #Public key need
 
 ```
 
+## JWT ECDSA Key Generated Command
+
+```bash
+
+openssl ecparam -name secp256k1 -genkey -noout -out ec-secp256k1-priv-key.pem #private key
+
+openssl ec -in ec-secp256k1-priv-key.pem -pubout > ec-secp256k1-pub-key.pem #public key
+
+```
+
 
 
 
