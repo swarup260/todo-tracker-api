@@ -38,6 +38,15 @@ npm run dev  #dev server
 - [X] Docker
 - [ ] ElasticSearch
 
+##### Docker Commands
+```bash  
+
+docker compose up --build #run docker instances and build new container
+
+docker compose up -d #run docker instances in detach mode
+
+docker compose down -v #stop docker running instances and delete volumes
+```
 
 ## JWT RSA Key Generated Command
 

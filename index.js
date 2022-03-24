@@ -34,7 +34,7 @@ app.get(
   async (_request, response) =>
     await response.status(200).json({
       status: true,
-      message: "Express Working",
+      message: "todo projects!",
     })
 );
 
