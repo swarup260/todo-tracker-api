@@ -23,11 +23,7 @@ app.use("/todos", todoRoutes);
 app.use("/projects", projectRoutes);
 app.use("/habit", habitRoutes);
 
-/* Socket.io */
-const http = require("http").createServer(app);
-const SOCKETS = require("./api/controllers/SocketEvent.controller");
-/* socket methods */
-SOCKETS.init(http);
+
 /* Test Routes */
 app.get(
   "/",
@@ -37,6 +33,8 @@ app.get(
       message: "todo projects!",
     })
 );
+
+const http = require("http").createServer(app);
 
 /* Run the Express */
 http.listen(config.PORT, () =>
